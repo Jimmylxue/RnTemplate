@@ -1,22 +1,24 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- */
-
 import React from 'react';
-import {Text, View} from 'react-native';
-import './src/styles/global.css';
-
+import {RootSiblingParent} from 'react-native-root-siblings';
 import {ComposeProviders} from '@components/ComposeProviders';
+import {ErrorHandler} from '@components/ErrorHandler';
+import {ApiProvider} from '@api/ApiProvider';
+import {NavigationContainer} from '@navigation/NavigationContainer';
+import Toast from 'react-native-toast-message';
+import {RootNavigator} from '@navigation/RootNavigator';
+import './src/styles/global.css';
 
 function App(): React.JSX.Element {
   return (
-    <ComposeProviders components={[]}>
-      <View className="flex-1 items-center justify-center bg-white">
-        <Text>Hello Worldsss</Text>
-      </View>
+    <ComposeProviders
+      components={[
+        RootSiblingParent,
+        ErrorHandler,
+        ApiProvider,
+        NavigationContainer,
+      ]}>
+      <RootNavigator />
+      <Toast topOffset={60} />
     </ComposeProviders>
   );
 }
