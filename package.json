@@ -3,10 +3,11 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "android": "react-native run-android",
+    "android": "ENVFILE=.env react-native run-android --port=8081",
+    "release-android": "ENVFILE=.env cd android && ./gradlew clean && ./gradlew assembleRelease",
     "ios": "react-native run-ios",
     "lint": "eslint .",
-    "start": "react-native start",
+    "start": "ENVFILE=.env react-native start",
     "test": "jest"
   },
   "dependencies": {
@@ -26,6 +27,7 @@
     "nativewind": "^4.1.23",
     "react": "19.0.0",
     "react-native": "0.78.1",
+    "react-native-code-push": "^9.0.1",
     "react-native-config": "^1.5.5",
     "react-native-error-boundary": "^2.0.0",
     "react-native-reanimated": "^3.17.1",

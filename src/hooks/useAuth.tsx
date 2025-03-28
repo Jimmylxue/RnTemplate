@@ -106,16 +106,16 @@ export function useUser() {
   });
 
   useEffect(() => {
-    try {
-      const user = JSON.parse(localStorage.getItem('login-user')!);
-      if (user) {
-        auth.setLoginUser(user);
-      } else {
-        auth.setShouldLoginStatus(true);
-      }
-    } catch {
-      auth.setShouldLoginStatus(true);
-    }
+    // try {
+    //   const user = JSON.parse(localStorage.getItem('login-user')!);
+    //   if (user) {
+    //     auth.setLoginUser(user);
+    //   } else {
+    //     auth.setShouldLoginStatus(true);
+    //   }
+    // } catch {
+    //   auth.setShouldLoginStatus(true);
+    // }
   }, []);
 
   const login = async (params: {

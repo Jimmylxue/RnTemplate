@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 import {RootSiblingParent} from 'react-native-root-siblings';
 import {ComposeProviders} from '@components/ComposeProviders';
 import {ErrorHandler} from '@components/ErrorHandler';
@@ -6,9 +6,24 @@ import {ApiProvider} from '@api/ApiProvider';
 import {NavigationContainer} from '@navigation/NavigationContainer';
 import Toast from 'react-native-toast-message';
 import {RootNavigator} from '@navigation/RootNavigator';
+import codePush from 'react-native-code-push';
 import './src/styles/global.css';
 
+const codePushOptions = {
+  // 生产环境配置
+  // checkFrequency: codePush.CheckFrequency.ON_APP_START,
+  checkFrequency: codePush.CheckFrequency.MANUAL,
+};
+
 function App(): React.JSX.Element {
+  useEffect(() => {
+    codePush.sync({
+      updateDialog: true, // 显示更新弹窗
+      installMode: codePush.InstallMode.IMMEDIATE,
+    });
+    codePush.notifyAppReady();
+  }, []);
+
   return (
     <ComposeProviders
       components={[
@@ -23,4 +38,4 @@ function App(): React.JSX.Element {
   );
 }
 
-export default App;
+export default codePush(codePushOptions)(App);
