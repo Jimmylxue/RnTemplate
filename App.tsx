@@ -16,14 +16,6 @@ const codePushOptions = {
 };
 
 function App(): React.JSX.Element {
-  useEffect(() => {
-    codePush.sync({
-      updateDialog: true, // 显示更新弹窗
-      installMode: codePush.InstallMode.IMMEDIATE,
-    });
-    codePush.notifyAppReady();
-  }, []);
-
   return (
     <ComposeProviders
       components={[

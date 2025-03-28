@@ -1,16 +1,19 @@
+import {NIcon} from '@components/Icon/NIcon';
 import {StyleSheet, View, Pressable, Text, ViewProps} from 'react-native';
-import AntDesign from 'react-native-vector-icons/AntDesign';
+// import AntDesign from 'react-native-vector-icons/AntDesign';
 
 interface TProps extends ViewProps {
   theme?: 'primary';
   onPress?: () => void;
   iconName?: string;
+  iconType: 'Feather' | 'AntDesign' | 'Entypo' | 'EvilIcons' | 'FontAwesome';
 }
 
 export default function Button({
   children,
   theme,
   iconName,
+  iconType,
   onPress,
   ...args
 }: TProps) {
@@ -21,8 +24,9 @@ export default function Button({
           style={[styles.button, {backgroundColor: '#3db2f5'}]}
           onPress={onPress}>
           {iconName && (
-            <AntDesign
-              name={'up'}
+            <NIcon
+              iconType={iconType}
+              name={iconName}
               size={18}
               color="#25292e"
               style={styles.buttonIcon}

@@ -10,19 +10,20 @@ import {fetchHeart} from '@api/app/user';
 // import {NIcon} from '@components/Icon/NIcon';
 import {useNavigation} from '@react-navigation/native';
 import {getMessageList} from '@api/app/message';
+import {NIcon} from '@components/Icon/NIcon';
 const Tab = createBottomTabNavigator();
 
 export const TabNavigator = () => {
   const navigation = useNavigation();
-  let timer: any = null;
-  const {mutateAsync} = fetchHeart();
-  useEffect(() => {
-    clearInterval(timer);
-    timer = setInterval(() => {
-      mutateAsync();
-    }, 1000 * 5);
-    return () => clearInterval(timer);
-  }, []);
+  // let timer: any = null;
+  // const {mutateAsync} = fetchHeart();
+  // useEffect(() => {
+  //   clearInterval(timer);
+  //   timer = setInterval(() => {
+  //     mutateAsync();
+  //   }, 1000 * 5);
+  //   return () => clearInterval(timer);
+  // }, []);
   const {data, refetch: refetchMessage} = getMessageList();
   const [unreadCount, setUnreadCount] = useState({msg: 0, sys: 0});
   useEffect(() => {
@@ -49,8 +50,8 @@ export const TabNavigator = () => {
       <SafeAreaView style={{flex: 1}}>
         <Tab.Navigator
           screenOptions={({route}) => ({
-            tabBarActiveTintColor: '#2a77c9',
-            tabBarInactiveTintColor: '#3db2f5',
+            // tabBarActiveTintColor: '#2a77c9',
+            // tabBarInactiveTintColor: '#3db2f5',
             headerShown: false,
             tabBarLabelStyle: {
               fontSize: 12,
@@ -70,22 +71,23 @@ export const TabNavigator = () => {
               }
               return (
                 <Pressable
-                  onPress={() => {
-                    navigation.navigate(route.name as any);
-                  }}
+                  // onPress={() => {
+                  //   console.log('route.name', route.name);
+                  //   navigation.navigate(route.name as any);
+                  // }}
                   className="relative ">
-                  {/* <NIcon
+                  <NIcon
                     iconType="Entypo"
                     name={iconName}
                     color={color}
                     size={24}
-                    onPress={() => {
-                      navigation.navigate(route.name as any);
-                    }}
+                    // onPress={() => {
+                    //   navigation.navigate(route.name as any);
+                    // }}
                     style={{
                       marginBottom: -8, // 向下微调图标的位置
                     }}
-                  /> */}
+                  />
                   {unreadCount?.msg > 0 && route.name === 'Message' && (
                     <Text
                       className="absolute -top-1 -right-3"

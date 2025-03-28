@@ -10,6 +10,8 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import Config from 'react-native-config';
+import {NIcon} from '@components/Icon/NIcon';
+import Toast from 'react-native-toast-message';
 
 type TProps = {
   changePage: React.Dispatch<
@@ -42,16 +44,23 @@ export const Login = observer(({changePage}: TProps) => {
 
   return (
     <Animated.View style={[animatedStyle]}>
-      <View className=" mt-[30] px-4">
-        {/* <NIcon
-          iconType="EvilIcons"
-          name="chevron-left"
+      <View className=" mt-24 px-4">
+        <NIcon
+          iconType="Feather"
+          name="arrow-left"
           // color="#FFF"
-          size={50}
+          size={40}
           onPress={() => {
-            changePage("start")
+            console.log('arrow-left');
+            Toast.show({
+              type: 'success',
+              text1: '登录成功',
+              position: 'bottom',
+              visibilityTime: 500,
+            });
+            changePage('start');
           }}
-        /> */}
+        />
         <Image
           source={require('@assets/images/talk.png')}
           style={{
