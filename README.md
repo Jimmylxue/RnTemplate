@@ -2,11 +2,13 @@
 
 ```bash
 
-code-push release-react quick_app-android android \
+code-push release-react quick_app android \
   --targetBinaryVersion 1.0.7 \
   --deploymentName Production \
   --description "通过 release-rdd222desssass344"
   --mandatory true
+
+code-push deployment ls quick_app -k
 ```
 
 - targetBinaryVersion 需与 build.gradle 中的 versionCode 一致
