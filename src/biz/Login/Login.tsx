@@ -20,8 +20,8 @@ type TProps = {
 };
 
 export const Login = observer(({changePage}: TProps) => {
-  const [phone, setPhone] = useState<string>('173001');
-  const [password, setPassword] = useState<string>('075583.');
+  const [phone, setPhone] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
 
   const {login, phone: _phone, password: _password} = useUser();
 
@@ -73,7 +73,7 @@ export const Login = observer(({changePage}: TProps) => {
           <View className=" mt-1 ">
             <Text className="  text-3xl">登录</Text>
             <Text className=" text-gray-500 text-ls mt-2">
-              请输入您的账号和密码{Config.API_URL}
+              请输入您的账号和密码
             </Text>
           </View>
           <View className=" mt-10">

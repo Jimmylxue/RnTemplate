@@ -374,10 +374,10 @@ export function Mine() {
                 }}
               />
               <Pressable
-                style={({pressed}) => [
+                style={() => [
                   {
                     marginRight: 20,
-                    backgroundColor: pressed ? '#1e90ff' : '#3db4f6', // 按下时变暗
+                    backgroundColor: '#3db4f6', // 按下时变暗
                     padding: 10,
                     paddingLeft: 20,
                     paddingRight: 20,
@@ -478,6 +478,7 @@ export function Mine() {
                 <Text>
                   {moment(item?.createdTime).format('YYYY-MM-DD HH:mm:ss')}
                 </Text>
+                <Text>{item.payStatus === 1 ? '待发放' : '已完成'}</Text>
               </View>
             ))}
           </ScrollView>

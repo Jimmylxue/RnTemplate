@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">RnTemplate</string>
+    <string name="app_name">店主之家</string>
     <string name="CodePushServerUrl">http://43.139.76.237:3000</string>
     <string name="CodePushDeploymentKey">FZ1a40RyqhAGrOl7KExAxwrRF7H14ksvOXqog</string>
 </resources>
