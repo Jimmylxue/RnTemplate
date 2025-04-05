@@ -1,6 +1,6 @@
 import Button from '@components/Button/Button';
 import {Input} from '@components/Input';
-import {useUser} from '@hooks/useAuth';
+import {auth, useUser} from '@hooks/useAuth';
 import {observer} from 'mobx-react-lite';
 import {useEffect, useState} from 'react';
 import {Image, Text, View} from 'react-native';
@@ -104,6 +104,8 @@ export const Login = observer(({changePage}: TProps) => {
               theme="primary"
               className=" mt-20 rounded-3xl w-[270]"
               onPress={async () => {
+                auth.setUser(phone);
+                auth.setPassword(password);
                 await login({
                   id: phone,
                   password,

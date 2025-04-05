@@ -68,6 +68,14 @@ class Auth {
   @action setToken(token?: string) {
     this.token = token;
   }
+
+  @action setPassword(pass: string) {
+    this.password = pass;
+  }
+
+  @action setUser(user: string) {
+    this.phone = user;
+  }
 }
 
 export const auth = new Auth();

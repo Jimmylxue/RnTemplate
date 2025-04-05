@@ -75,7 +75,7 @@ export function Mine() {
   const {mutateAsync: changePassword} = fetchChangePassword();
   const {mutateAsync: meInfoText} = fetchMeInfo();
   const [text, setText] = useState('');
-
+  const withdrawDate = useRef<number>(0);
   // 提现记录
   const showB = () => {
     Animated.parallel([
@@ -385,6 +385,14 @@ export function Mine() {
                   },
                 ]}
                 onPress={async () => {
+                  if (+new Date() - withdrawDate.current < 1000 * 60 * 10) {
+                    Toast.show({
+                      type: 'error',
+                      text1: '请勿频繁提现',
+                      visibilityTime: 500,
+                    });
+                    return;
+                  }
                   if (Number(coin) > (data as any)) {
                     Toast.show({
                       type: 'error',
@@ -418,6 +426,7 @@ export function Mine() {
                   });
                   await refetch();
                   await refetchWithdrawList();
+                  withdrawDate.current = +new Date();
                 }}>
                 <Text style={{color: 'white'}}>提现</Text>
               </Pressable>
@@ -469,27 +478,6 @@ export function Mine() {
                 <Text>
                   {moment(item?.createdTime).format('YYYY-MM-DD HH:mm:ss')}
                 </Text>
-                <Pressable
-                  disabled={item.payStatus === 2}
-                  onPress={async () => {
-                    await cancelWithdraw({recordId: item.recordId});
-                    await refetchWithdrawList();
-                    Toast.show({
-                      type: 'success',
-                      text1: '取消成功',
-                      visibilityTime: 500,
-                    });
-                    await refetch();
-                  }}
-                  style={{
-                    padding: 6,
-                    borderColor:
-                      item.payStatus === 1 ? '#1e90ff' : 'transparent',
-                    borderWidth: 1,
-                    borderRadius: 8,
-                  }}>
-                  <Text>{item.payStatus === 1 ? '取消申请' : '已完成'}</Text>
-                </Pressable>
               </View>
             ))}
           </ScrollView>
