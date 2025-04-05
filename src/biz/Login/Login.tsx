@@ -37,10 +37,10 @@ export const Login = observer(({changePage}: TProps) => {
     opacity.value = withTiming(1, {duration: 1000});
   }, [opacity]);
 
-  // useEffect(() => {
-  //   setPhone(_phone || '');
-  //   setPassword(_password || '');
-  // }, [_phone, _password]);
+  useEffect(() => {
+    setPhone(_phone || '');
+    setPassword(_password || '');
+  }, [_phone, _password]);
 
   return (
     <Animated.View style={[animatedStyle]}>
