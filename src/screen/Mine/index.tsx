@@ -428,7 +428,7 @@ export function Mine() {
                   await refetchWithdrawList();
                   withdrawDate.current = +new Date();
                 }}>
-                <Text style={{color: 'white'}}>提现</Text>
+                <Text className=" mr-4">提现</Text>
               </Pressable>
             </View>
           )}
