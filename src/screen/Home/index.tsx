@@ -12,6 +12,8 @@ import {
   Pressable,
   Text,
   View,
+  SafeAreaView,
+  StatusBar,
 } from 'react-native';
 import Toast from 'react-native-toast-message';
 // 基于expo的项目使用expo install react-native-webview 安装该包
@@ -30,26 +32,21 @@ function getCoin(coin: number) {
   });
 }
 
+let globalUri: any = {};
+
 export function Home() {
   const [linkType, setLinkType] = useState(-1);
   const {data, refetch} = getProductList({linkTypeId: linkType}, linkType);
   const [uri, setUrl] = useState<any>({});
   const [isLoading, setIsLoading] = useState(true);
   const [isStop, setIsStop] = useState<boolean>(false);
-  const [visitTime, setVisitTime] = useState(10);
+  const [visitTime, setVisitTime] = useState(15);
   const {mutateAsync: reqCoin} = fetchGetCoin();
   const [isAutoClick, setIsAutoClick] = useState(false);
   const fadeAnimA = useRef(new Animated.Value(0)).current;
   const {data: platformList} = getPlantForm() as any;
   const {data: coin, refetch: getCoinFetch} = fetchCoin() as any;
   const {data: commonMsg = []} = getCommonMessageList() as any;
-
-  // const currentTime = useRef(+new Date())
-  // useEffect(() => {
-  //   if ((+new Date() - currentTime.current) / 1000 / 60 / 60 > 24) {
-  //     setIsAutoClick(false)
-  //   }
-  // }, [coin])
 
   const handleInjectJavaScript = `
     (function() {
@@ -99,6 +96,19 @@ export function Home() {
     };
   }, [isStop]);
 
+  const gainCoinFn = (uri: any) => {
+    globalUri = uri;
+    /**
+     * 随机0~10s 的 settimeout
+     */
+    const randomTime = Math.floor(Math.random() * 10000);
+    setTimeout(() => {
+      getCoin(globalUri?.coin);
+      reqCoin({linkId: globalUri?.linkId});
+      getCoinFetch();
+    }, randomTime);
+  };
+
   useEffect(() => {
     let timer: any;
     if (isLoading) {
@@ -107,14 +117,14 @@ export function Home() {
     if (visitTime > 0) {
       timer = setTimeout(() => setVisitTime(vit => vit - 1), 1000);
     } else {
-      getCoin(uri?.coin);
-      reqCoin({linkId: uri?.linkId});
-      getCoinFetch();
+      gainCoinFn(uri);
       if (isAutoClick) {
         refetch();
       }
     }
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+    };
   }, [uri, visitTime, isLoading, isAutoClick]);
 
   const styles = StyleSheet.create({
@@ -164,174 +174,176 @@ export function Home() {
     }
   }, [commonMsg?.result, scrollX, screenWidth]);
   return (
-    <View
-      style={{
-        position: 'relative',
-        flex: 1,
-        paddingTop: 40,
-        backgroundColor: '#fff',
-      }}>
-      <Animated.View
-        style={{
-          width: '100%',
-          height: '100%',
-          backgroundColor: 'white',
-          position: 'absolute',
-          top: 0,
-          transform: [{translateY: fadeAnimA}],
-          zIndex: 999,
-          padding: 20,
-        }}>
-        {platformList?.map((item: any) => (
-          <Pressable
-            key={item?.linkTypeId}
-            style={{
-              backgroundColor: 'rgba(0,0,0,.1)',
-              padding: 10,
-              borderRadius: 10,
-              marginVertical: 10,
-            }}
-            className="relative"
-            onPress={() => {
-              if (item?.openStatus === 2) {
-                Toast.show({
-                  type: 'error',
-                  text1: '该平台暂未开放',
-                  visibilityTime: 1500,
-                });
-                return;
-              }
-              setLinkType(item?.linkTypeId);
-              Animated.parallel([
-                Animated.timing(fadeAnimA, {
-                  toValue: 999, // A 渐显
-                  duration: 500,
-                  useNativeDriver: true,
-                }),
-              ]).start();
-            }}>
-            <View className="flex flex-row items-center">
-              <Image
-                source={{uri: item?.mainImage}}
-                width={50}
-                height={50}
-                borderRadius={25}
-                className="ml-10"
-              />
-              <Text className="text-2xl ml-4">{item?.name}</Text>
-            </View>
-            <View
-              className="absolute"
-              style={{
-                top: 50,
-                right: 10,
-                backgroundColor: item?.openStatus === 2 ? 'red' : 'green',
-                width: 10,
-                height: 10,
-                borderRadius: 10,
-                transform: [{translateX: -25}, {translateY: -20}],
-              }}></View>
-          </Pressable>
-        ))}
-      </Animated.View>
+    <SafeAreaView className=" h-screen">
+      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
       <View
-        className="justify-evenly"
         style={{
-          position: 'absolute',
-          top: 0,
-          display: 'flex',
-          flexDirection: 'row',
-          alignItems: 'center',
-          width: '100%',
-          zIndex: 3,
-          height: 40,
-          paddingHorizontal: 20,
+          position: 'relative',
+          flex: 1,
+          backgroundColor: '#fff',
+          paddingTop: StatusBar.currentHeight,
         }}>
-        <View
-          className="w-32 flex flex-row items-center"
-          // style={{
-          //   borderColor: "#3db2f5",
-          //   borderWidth: 1,
-          //   borderRadius: 50,
-          //   padding: 5,
-          // }}
-        >
-          <Image
-            source={require('@assets/images/coin.png')}
-            style={{width: 20, height: 20, borderRadius: 50}}
-          />
-          <Text style={{color: '#3db2f5'}} className="text-xl">
-            {coin as any}
-          </Text>
-        </View>
-        <Pressable
-          className="w-32 text-center flex flex-row items-center justify-center"
+        <Animated.View
           style={{
-            borderColor: '#3db2f5',
-            borderWidth: 1,
-            borderRadius: 50,
-            padding: 5,
-          }}
-          onPress={() => {
-            Animated.parallel([
-              Animated.timing(fadeAnimA, {
-                toValue: 0, // A 渐显
-                duration: 500,
-                useNativeDriver: true,
-              }),
-            ]).start();
+            width: '100%',
+            height: '100%',
+            backgroundColor: 'white',
+            position: 'absolute',
+            top: StatusBar.currentHeight,
+            transform: [{translateY: fadeAnimA}],
+            zIndex: 999,
+            padding: 20,
           }}>
-          <Text
-            style={{
-              color: '#3db2f5',
-            }}>
-            {platformList?.find((item: any) => item.linkTypeId === linkType)
-              ?.name || ''}
-          </Text>
-        </Pressable>
-        <Pressable
-          className="w-32 flex flex-row justify-end"
-          onPress={() => {
-            setIsAutoClick(!isAutoClick);
+          {platformList?.map((item: any) => (
+            <Pressable
+              key={item?.linkTypeId}
+              style={{
+                backgroundColor: 'rgba(0,0,0,.1)',
+                padding: 10,
+                borderRadius: 10,
+                marginVertical: 10,
+              }}
+              className="relative"
+              onPress={() => {
+                if (item?.openStatus === 2) {
+                  Toast.show({
+                    type: 'error',
+                    text1: '该平台暂未开放',
+                    visibilityTime: 1500,
+                  });
+                  return;
+                }
+                setLinkType(item?.linkTypeId);
+                Animated.parallel([
+                  Animated.timing(fadeAnimA, {
+                    toValue: 999, // A 渐显
+                    duration: 500,
+                    useNativeDriver: true,
+                  }),
+                ]).start();
+              }}>
+              <View className="flex flex-row items-center">
+                <Image
+                  source={{uri: item?.mainImage}}
+                  width={50}
+                  height={50}
+                  borderRadius={25}
+                  className="ml-10"
+                />
+                <Text className="text-2xl ml-4">{item?.name}</Text>
+              </View>
+              <View
+                className="absolute"
+                style={{
+                  top: 50,
+                  right: 10,
+                  backgroundColor: item?.openStatus === 2 ? 'red' : 'green',
+                  width: 10,
+                  height: 10,
+                  borderRadius: 10,
+                  transform: [{translateX: -25}, {translateY: -20}],
+                }}></View>
+            </Pressable>
+          ))}
+        </Animated.View>
+        <View
+          className="justify-evenly"
+          style={{
+            position: 'absolute',
+            top: StatusBar.currentHeight,
+            display: 'flex',
+            flexDirection: 'row',
+            alignItems: 'center',
+            width: '100%',
+            zIndex: 3,
+            height: 40,
+            paddingHorizontal: 20,
           }}>
-          <Text
-            className="text-center "
+          <View
+            className="w-32 flex flex-row items-center"
+            // style={{
+            //   borderColor: "#3db2f5",
+            //   borderWidth: 1,
+            //   borderRadius: 50,
+            //   padding: 5,
+            // }}
+          >
+            <Image
+              source={require('@assets/images/coin.png')}
+              style={{width: 20, height: 20, borderRadius: 50}}
+            />
+            <Text style={{color: '#3db2f5'}} className="text-xl">
+              {coin as any}
+            </Text>
+          </View>
+          <Pressable
+            className="w-32 text-center flex flex-row items-center justify-center"
             style={{
               borderColor: '#3db2f5',
               borderWidth: 1,
               borderRadius: 50,
               padding: 5,
-              color: '#3db2f5',
-              width: 60,
+            }}
+            onPress={() => {
+              Animated.parallel([
+                Animated.timing(fadeAnimA, {
+                  toValue: 0, // A 渐显
+                  duration: 500,
+                  useNativeDriver: true,
+                }),
+              ]).start();
             }}>
-            {isAutoClick ? '暂停' : '开始'}
-          </Text>
-        </Pressable>
-      </View>
-      {commonMsg?.result?.length > 0 && (
-        <Animated.View
-          style={[
-            styles.animatedContainer,
-            {
-              transform: [{translateX: scrollX}],
-              width: screenWidth * commonMsg?.result.length * 2, // 容器宽度为消息宽度的两倍（实现无缝循环）
-              borderTopColor: '#eee',
-              borderTopWidth: 1,
-            },
-          ]}>
-          {[...commonMsg?.result, ...commonMsg?.result].map(
-            (message, index) => (
-              <View
-                key={index}
-                style={[styles.messageBox, {width: screenWidth}]}>
-                <Text style={styles.message}>{message?.content}</Text>
-              </View>
-            ),
-          )}
-        </Animated.View>
-      )}
-      {/* {!isLoading && !isOtherPage && ( */}
-      {/* {!isStop && !isAutoClick && (
+            <Text
+              style={{
+                color: '#3db2f5',
+              }}>
+              {platformList?.find((item: any) => item.linkTypeId === linkType)
+                ?.name || ''}
+            </Text>
+          </Pressable>
+          <Pressable
+            className="w-32 flex flex-row justify-end"
+            onPress={() => {
+              setIsAutoClick(!isAutoClick);
+            }}>
+            <Text
+              className="text-center "
+              style={{
+                borderColor: '#3db2f5',
+                borderWidth: 1,
+                borderRadius: 50,
+                padding: 5,
+                color: '#3db2f5',
+                width: 60,
+              }}>
+              {isAutoClick ? '暂停' : '开始'}
+            </Text>
+          </Pressable>
+        </View>
+        {commonMsg?.result?.length > 0 && (
+          <Animated.View
+            style={[
+              styles.animatedContainer,
+              {
+                transform: [{translateX: scrollX}],
+                width: screenWidth * commonMsg?.result.length * 2, // 容器宽度为消息宽度的两倍（实现无缝循环）
+                borderTopColor: '#eee',
+                borderTopWidth: 1,
+              },
+            ]}>
+            {[...commonMsg?.result, ...commonMsg?.result].map(
+              (message, index) => (
+                <View
+                  key={index}
+                  style={[styles.messageBox, {width: screenWidth}]}>
+                  <Text style={styles.message}>{message?.content}</Text>
+                </View>
+              ),
+            )}
+          </Animated.View>
+        )}
+        {/* {!isLoading && !isOtherPage && ( */}
+        {/* {!isStop && !isAutoClick && (
         <Pressable
           onPress={() => refetch()}
           style={{
@@ -354,55 +366,58 @@ export function Home() {
           </Text>
         </Pressable>
       )} */}
-      {!isAutoClick ? (
-        <View className=" justify-center flex-row mt-[180]">
-          <Image
-            source={{
-              uri: platformList?.find(
-                (item: any) => item.linkTypeId === linkType,
-              )?.mainImage,
-            }}
-            width={300}
-            height={300}
-          />
-        </View>
-      ) : (
-        <>
-          <Text
-            style={{
-              position: 'absolute',
-              left: -15,
-              top: '50%',
-              zIndex: 2,
-              backgroundColor: 'rgba(0,0,0,.3)',
-              padding: 20,
-              fontSize: 20,
-              color: 'white',
-              borderRadius: 50,
-            }}>
-            {visitTime}
-          </Text>
-          <WebView
-            style={{zIndex: -1}}
-            source={{
-              uri: uri?.fullLink,
-            }}
-            injectedJavaScript={handleInjectJavaScript}
-            onShouldStartLoadWithRequest={(event: any) => {
-              if (event.url.includes('login')) {
-                setIsStop(true);
-              }
-              return true;
-            }}
-            onLoad={() => {
-              setIsLoading(true);
-            }}
-            onLoadEnd={() => {
-              setIsLoading(false);
-            }}
-          />
-        </>
-      )}
-    </View>
+        {!isAutoClick ? (
+          <View className=" justify-center flex-row mt-[180]">
+            <Image
+              source={{
+                uri: platformList?.find(
+                  (item: any) => item.linkTypeId === linkType,
+                )?.mainImage,
+              }}
+              width={300}
+              height={300}
+            />
+          </View>
+        ) : (
+          <>
+            <Text
+              style={{
+                position: 'absolute',
+                left: -15,
+                top: '50%',
+                zIndex: 2,
+                backgroundColor: 'rgba(0,0,0,.3)',
+                padding: 20,
+                fontSize: 20,
+                color: 'white',
+                borderRadius: 50,
+              }}>
+              {visitTime}
+            </Text>
+            <View className=" w-full flex-1 mt-[40px]">
+              <WebView
+                style={{zIndex: -1}}
+                source={{
+                  uri: uri?.fullLink,
+                }}
+                injectedJavaScript={handleInjectJavaScript}
+                onShouldStartLoadWithRequest={(event: any) => {
+                  if (event.url.includes('login')) {
+                    setIsStop(true);
+                  }
+                  return true;
+                }}
+                onLoad={() => {
+                  setIsLoading(true);
+                }}
+                onLoadEnd={() => {
+                  setIsLoading(false);
+                }}
+              />
+            </View>
+          </>
+        )}
+      </View>
+    </SafeAreaView>
   );
 }

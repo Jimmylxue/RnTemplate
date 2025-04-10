@@ -4,16 +4,12 @@ import {
   fetchLogout,
   fetchMeInfo,
 } from '@api/app/user';
-import {
-  fetchCancelWithdraw,
-  fetchRequestWithdraw,
-  getWithdrawList,
-} from '@api/app/withdraw';
+import {fetchRequestWithdraw, getWithdrawList} from '@api/app/withdraw';
 import Button from '@components/Button/Button';
 import {useUser} from '@hooks/useAuth';
 import classNames from 'classnames';
 import moment from 'moment';
-import {useEffect, useRef, useState} from 'react';
+import {useRef, useState} from 'react';
 import {
   Animated,
   Image,
@@ -21,6 +17,7 @@ import {
   ScrollView,
   Text,
   TextInput,
+  TouchableOpacity,
   View,
 } from 'react-native';
 import Toast from 'react-native-toast-message';
@@ -63,15 +60,13 @@ export function Mine() {
   const [coin, setCoin] = useState('');
   const {mutateAsync} = fetchRequestWithdraw();
   const [isShowButton, setIsShowButton] = useState(true);
-  const [page, setPage] = useState(1);
   const [newPassword, setNewPassword] = useState('');
   const [originPassword, setOldPassword] = useState('');
   const {mutateAsync: statusLogout} = fetchLogout();
   const {data: withdrawList, refetch: refetchWithdrawList} = getWithdrawList({
-    page,
+    page: 1,
     pageSize: 20,
   }) as any;
-  const {mutateAsync: cancelWithdraw} = fetchCancelWithdraw();
   const {mutateAsync: changePassword} = fetchChangePassword();
   const {mutateAsync: meInfoText} = fetchMeInfo();
   const [text, setText] = useState('');
@@ -519,17 +514,7 @@ export function Mine() {
               secureTextEntry={true}
             />
           </View>
-          <Pressable
-            style={({pressed}) => [
-              {
-                backgroundColor: pressed ? '#1e90ff' : '#3db4f6', // 按下时变暗
-                padding: 10,
-                paddingLeft: 20,
-                paddingRight: 20,
-                borderRadius: 6,
-                marginTop: 20,
-              },
-            ]}
+          <TouchableOpacity
             onPress={async () => {
               const regex = /^\d+$/;
               if (!regex.test(newPassword)) {
@@ -548,10 +533,8 @@ export function Mine() {
                 logOut();
               }
             }}>
-            <Text style={{color: 'white'}} className="text-center">
-              提交
-            </Text>
-          </Pressable>
+            <Text className="text-center mt-2">提交</Text>
+          </TouchableOpacity>
           <Pressable
             style={{
               position: 'absolute',

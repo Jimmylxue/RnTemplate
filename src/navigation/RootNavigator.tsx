@@ -11,17 +11,13 @@ export const RootNavigator = observer(() => {
   const logined = !!auth.token;
   const logout = !auth.token;
 
-  console.log('logined', logined);
-
   return (
     <RootStack.Navigator
-      initialRouteName="Auth"
       screenOptions={{
         gestureEnabled: false,
         headerTitleAlign: 'center',
         animation: 'slide_from_right',
         headerShadowVisible: false,
-        // headerBackTitleVisible: false,
         headerBackButtonMenuEnabled: false,
         headerTintColor: 'rgba(0, 0, 0, 0.85)',
         headerTitleStyle: {
@@ -36,16 +32,6 @@ export const RootNavigator = observer(() => {
             component={TabNavigator}
             options={{headerShown: false}}
           />
-          {/* <RootStack.Screen
-						name="Painting"
-						component={Painting}
-						options={{ headerShown: false }}
-					/>
-					<RootStack.Screen
-						name="Camera"
-						component={Camera}
-						options={{ headerShown: false }}
-					/> */}
         </RootStack.Group>
       )}
       {logout && (

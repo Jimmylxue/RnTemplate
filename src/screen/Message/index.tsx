@@ -1,22 +1,60 @@
 import {fetchReadMessage, getMessageList} from '@api/app/message';
 import moment from 'moment';
-import React, {useEffect, useRef, useState} from 'react';
-import {Animated, Image, Pressable, ScrollView, Text, View} from 'react-native';
+import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
+import {
+  Animated,
+  FlatList,
+  Image,
+  Pressable,
+  StatusBar,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
+
+const MessageItem = React.memo(({item, msgType}: any) => {
+  return (
+    <View style={styles.messageItem}>
+      <View style={styles.messageHeader}>
+        <Image
+          source={
+            msgType === 0
+              ? require('@assets/images/megaphone.png')
+              : require('@assets/images/user.png')
+          }
+          style={styles.messageIcon}
+        />
+        <Text style={styles.messageTitle}>
+          {msgType === 0 ? item.letter.title : '客服消息'}
+        </Text>
+        {item.status === 1 && <View style={styles.unreadIndicator} />}
+      </View>
+      <Text style={styles.messageContent}>{item.letter.content}</Text>
+      {item.letter?.imgUrl && (
+        <Image source={{uri: item.letter.imgUrl}} style={styles.messageImage} />
+      )}
+      <Text style={styles.messageTime}>
+        {moment(item.createdTime).format('YYYY-MM-DD HH:mm:ss')}
+      </Text>
+    </View>
+  );
+});
 
 export default function Message() {
   const {mutateAsync: readMsg} = fetchReadMessage();
   const {data, refetch: refetchMessage} = getMessageList();
   const [unreadCount, setUnreadCount] = useState({msg: 0, sys: 0});
-  const fadeAnimA = useRef(new Animated.Value(0)).current;
-  const fadeAnimB = useRef(new Animated.Value(999)).current;
+  const [isAnimating, setIsAnimating] = useState(false);
   const [msgType, setMsgType] = useState(1);
 
+  // 动画值
+  const fadeAnimA = useRef(new Animated.Value(0)).current;
+  const fadeAnimB = useRef(new Animated.Value(999)).current;
+
+  // 计算未读消息数
   useEffect(() => {
     if (data?.length > 0) {
-      const unread = {
-        sys: 0,
-        msg: 0,
-      };
+      const unread = {sys: 0, msg: 0};
       data.forEach((item: any) => {
         if (item?.letter?.platform === 1 && item?.status === 1) {
           unread.sys += 1;
@@ -27,213 +65,251 @@ export default function Message() {
       });
       setUnreadCount(unread);
     }
-  }, [data, msgType]);
+  }, [data]);
 
-  // 切换到 B
-  const showB = () => {
+  // 过滤后的数据
+  const filteredData = useMemo(
+    () => data?.filter((item: any) => item.letter.platform === msgType) || [],
+    [data, msgType],
+  );
+
+  // 显示消息详情页
+  const showB = useCallback(() => {
+    if (isAnimating) {
+      return;
+    }
+    setIsAnimating(true);
+
+    // 停止任何正在进行的动画
+    fadeAnimA.stopAnimation();
+    fadeAnimB.stopAnimation();
+
     Animated.parallel([
       Animated.timing(fadeAnimA, {
-        toValue: 999, // A 渐隐
-        duration: 500,
+        toValue: 999,
+        duration: 300,
         useNativeDriver: true,
       }),
       Animated.timing(fadeAnimB, {
-        toValue: 50, // B 渐显
-        duration: 500,
+        toValue: 50,
+        duration: 300,
         useNativeDriver: true,
       }),
-    ]).start();
-  };
+    ]).start(() => setIsAnimating(false));
+  }, [isAnimating, fadeAnimA, fadeAnimB]);
 
-  // 切换回 A
-  const showA = () => {
+  // 返回消息列表页
+  const showA = useCallback(() => {
+    if (isAnimating) {
+      return;
+    }
+    setIsAnimating(true);
+
+    fadeAnimA.stopAnimation();
+    fadeAnimB.stopAnimation();
+
     Animated.parallel([
       Animated.timing(fadeAnimA, {
-        toValue: 0, // A 渐显
-        duration: 500,
+        toValue: 0,
+        duration: 300,
         useNativeDriver: true,
       }),
       Animated.timing(fadeAnimB, {
-        toValue: 999, // B 渐隐
-        duration: 500,
+        toValue: 999,
+        duration: 300,
         useNativeDriver: true,
       }),
-    ]).start(() => setMsgType(1));
-  };
+    ]).start(() => {
+      setMsgType(1);
+      setIsAnimating(false);
+    });
+  }, [isAnimating, fadeAnimA, fadeAnimB]);
 
   return (
-    <>
-      <Animated.Text
-        className="mt-16 pl-8 font-bold text-2xl"
-        style={{
-          transform: [{translateY: fadeAnimA}],
-        }}>
-        消息
-      </Animated.Text>
+    <View style={styles.container}>
+      {/* 消息列表页 */}
       <Animated.View
-        style={{
-          backgroundColor: '#fff',
-          borderRadius: 20,
-          display: 'flex',
-          flexDirection: 'column',
-          position: 'relative',
-          marginTop: 20,
-          marginLeft: 20,
-          marginRight: 20,
-          transform: [{translateY: fadeAnimA}],
-        }}>
-        {/* <View
-          style={{
-            borderBottomColor: "#eee",
-            borderBottomWidth: 2,
-            padding: 20,
-          }}
-        >
+        style={[styles.listContainer, {transform: [{translateY: fadeAnimA}]}]}>
+        <Text style={styles.title}>消息</Text>
+
+        <View style={styles.messageTypeContainer}>
           <Pressable
-            className="ml-2 flex flex-row items-center relative"
-            onPress={() => {
-              setMsgType(1)
-              showB()
-              readMsg({ platform: 1 })
-            }}
-          >
-            <Image
-              style={{ width: 16, height: 16, marginRight: 12 }}
-              source={require("@assets/images/message.png")}
-            />
-            <Text>系统消息</Text>
-            {unreadCount?.sys > 0 && (
-              <Text
-                style={{
-                  marginLeft: "auto",
-                  color: "white",
-                  backgroundColor: "red",
-                  width: 20,
-                  height: 20,
-                  borderRadius: 10,
-                  textAlign: "center",
-                }}
-              >
-                {unreadCount?.sys}
-              </Text>
-            )}
-          </Pressable>
-        </View> */}
-        <View
-          style={{
-            borderBottomColor: '#eee',
-            borderBottomWidth: 2,
-            padding: 20,
-          }}>
-          <Pressable
-            className="ml-2 flex flex-row items-center relative"
+            style={styles.messageTypeItem}
             onPress={() => {
               setMsgType(3);
               showB();
               readMsg({platform: 3});
             }}>
             <Image
-              style={{width: 16, height: 16, marginRight: 12}}
+              style={styles.messageTypeIcon}
               source={require('@assets/images/user.png')}
             />
-            <Text>客服消息</Text>
+            <Text style={styles.messageTypeText}>客服消息</Text>
             {unreadCount?.msg > 0 && (
-              <Text
-                style={{
-                  marginLeft: 'auto',
-                  color: 'white',
-                  backgroundColor: 'red',
-                  width: 20,
-                  height: 20,
-                  borderRadius: 10,
-                  textAlign: 'center',
-                }}>
-                {unreadCount?.msg}
-              </Text>
+              <View style={styles.unreadBadge}>
+                <Text style={styles.unreadBadgeText}>{unreadCount?.msg}</Text>
+              </View>
             )}
           </Pressable>
         </View>
       </Animated.View>
+
+      {/* 消息详情页 */}
       <Animated.View
-        className=" bg-white rounded-2xl p-2  absolute top-0"
-        style={{
-          height: '90%',
-          width: '90%',
-          marginLeft: '5%',
-          transform: [{translateY: fadeAnimB}],
-        }}>
-        <ScrollView style={{flex: 1, width: '100%'}}>
-          {data?.filter((item: any) => {
-            if (item.letter.platform === msgType) {
-              return true;
-            }
-            return false;
-          }).length === 0 && <Text>暂无消息</Text>}
-          {data
-            ?.filter((item: any) => {
-              if (item.letter.platform === msgType) {
-                return true;
-              }
-              return false;
-            })
-            .map((item: any) => (
-              <View
-                key={item.recordId}
-                className="my-2 border-b border-gray-200 pb-4 w-full">
-                <View className=" flex flex-row items-center justify-stretch">
-                  <Image
-                    source={require('@assets/images/megaphone.png')}
-                    className="w-12 h-12"
-                  />
-                  <Text className="ml-2">
-                    {msgType === 0 ? item.letter.title : '客服消息'}
-                  </Text>
-                  {item.status === 1 && (
-                    <View
-                      className="w-2 h-2 bg-red-600 ml-1"
-                      style={{borderRadius: 4}}></View>
-                  )}
-                </View>
-                <Text className="px-8">{item.letter.content}</Text>
-                {item.letter?.imgUrl && (
-                  <Image
-                    source={{uri: item.letter.imgUrl}}
-                    className="w-full my-2 h-96"
-                  />
-                )}
-                <Text className="text-right mr-4">
-                  {moment(item.createdTime).format('YYYY-MM-DD HH:mm:ss')}
-                </Text>
-              </View>
-            ))}
-        </ScrollView>
+        style={[
+          styles.detailContainer,
+          {transform: [{translateY: fadeAnimB}]},
+        ]}>
+        <FlatList
+          data={filteredData}
+          keyExtractor={item => item.recordId}
+          renderItem={({item}) => <MessageItem item={item} msgType={msgType} />}
+          ListEmptyComponent={<Text style={styles.emptyText}>暂无消息</Text>}
+          contentContainerStyle={styles.flatListContent}
+        />
+
         <Pressable
-          style={{
-            position: 'absolute',
-            top: -40,
-            left: '50%',
-            zIndex: 2,
-            padding: 10,
-            transform: [{translateX: -25}],
-          }}
+          style={styles.closeButton}
           onPress={async () => {
             await refetchMessage();
             showA();
           }}>
-          <Text
-            style={{
-              height: 36,
-              width: 36,
-              backgroundColor: 'rgba(0,0,0,.4)',
-              borderRadius: 18,
-              textAlign: 'center',
-              lineHeight: 36,
-              color: 'white',
-            }}>
-            X
-          </Text>
+          <Text style={styles.closeButtonText}>X</Text>
         </Pressable>
       </Animated.View>
-    </>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    paddingTop: StatusBar.currentHeight,
+    flex: 1,
+    backgroundColor: '#f5f5f5',
+  },
+  listContainer: {
+    paddingTop: StatusBar.currentHeight,
+    flex: 1,
+  },
+  title: {
+    marginLeft: 16,
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 20,
+  },
+  messageTypeContainer: {
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    marginHorizontal: 20,
+    marginTop: 20,
+  },
+  messageTypeItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  messageTypeIcon: {
+    width: 16,
+    height: 16,
+    marginRight: 12,
+  },
+  messageTypeText: {
+    fontSize: 16,
+  },
+  unreadBadge: {
+    marginLeft: 'auto',
+    backgroundColor: 'red',
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  unreadBadgeText: {
+    color: 'white',
+    fontSize: 12,
+  },
+  detailContainer: {
+    position: 'absolute',
+    top: StatusBar.currentHeight,
+    left: '5%',
+    width: '90%',
+    height: '90%',
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    padding: 16,
+  },
+  flatListContent: {
+    paddingBottom: 20,
+  },
+  messageItem: {
+    marginBottom: 16,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  messageHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  messageIcon: {
+    width: 24,
+    height: 24,
+    marginRight: 8,
+  },
+  messageTitle: {
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  unreadIndicator: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: 'red',
+    marginLeft: 8,
+  },
+  messageContent: {
+    paddingLeft: 32,
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 8,
+  },
+  messageImage: {
+    width: '100%',
+    height: 200,
+    borderRadius: 8,
+    marginVertical: 8,
+  },
+  messageTime: {
+    textAlign: 'right',
+    fontSize: 12,
+    color: '#999',
+  },
+  emptyText: {
+    textAlign: 'center',
+    marginTop: 40,
+    fontSize: 16,
+    color: '#999',
+  },
+  closeButton: {
+    position: 'absolute',
+    top: -40,
+    left: '50%',
+    zIndex: 2,
+    padding: 10,
+    transform: [{translateX: -18}],
+  },
+  closeButtonText: {
+    height: 36,
+    width: 36,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    borderRadius: 18,
+    textAlign: 'center',
+    lineHeight: 36,
+    color: 'white',
+    fontSize: 16,
+  },
+});
